@@ -61,8 +61,10 @@ void ModelRenderer::display()
 	const mat3 normalMatrix = mat3(transpose(inverseModelViewMatrix));
 	const mat3 inverseNormalMatrix = inverse(normalMatrix);
 	const vec2 viewportSize = viewer()->viewportSize();
+    const vec3 lightColor = vec3 (1., 0.0, 0.);
 
-	auto shaderProgramModelBase = shaderProgram("model-base");
+
+    auto shaderProgramModelBase = shaderProgram("model-base");
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -106,15 +108,16 @@ void ModelRenderer::display()
 
 	vec4 worldCameraPosition = inverseModelViewMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	vec4 worldLightPosition = inverseModelLightMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
 	shaderProgramModelBase->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramModelBase->setUniform("viewportSize", viewportSize);
 	shaderProgramModelBase->setUniform("worldCameraPosition", vec3(worldCameraPosition));
 	shaderProgramModelBase->setUniform("worldLightPosition", vec3(worldLightPosition));
 	shaderProgramModelBase->setUniform("wireframeEnabled", wireframeEnabled);
 	shaderProgramModelBase->setUniform("wireframeLineColor", wireframeLineColor);
-	
-	shaderProgramModelBase->use();
+    shaderProgramModelBase->setUniform("lightColor", lightColor);
+
+
+    shaderProgramModelBase->use();
 
 	for (uint i = 0; i < groups.size(); i++)
 	{
@@ -123,7 +126,6 @@ void ModelRenderer::display()
 			const Material & material = materials.at(groups.at(i).materialIndex);
 
 			shaderProgramModelBase->setUniform("diffuseColor", material.diffuse);
-
 			if (material.diffuseTexture)
 			{
 				shaderProgramModelBase->setUniform("diffuseTexture", 0);

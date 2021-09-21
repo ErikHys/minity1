@@ -8,6 +8,7 @@ uniform vec3 diffuseColor;
 uniform sampler2D diffuseTexture;
 uniform bool wireframeEnabled;
 uniform vec4 wireframeLineColor;
+uniform vec3 lightColor;
 
 in fragmentData
 {
@@ -21,7 +22,18 @@ out vec4 fragColor;
 
 void main()
 {
-	vec4 result = vec4(0.5,0.5,0.5,1.0);
+	vec3 objectColor = vec3(1.0,1.0,1.0);
+	float ambientLight = 0.1;
+	vec3 ambientColor = ambientLight * lightColor * objectColor;
+	vec3 lightDir = worldLightPosition - fragment.position;
+	vec3 viewDir = worldCameraPosition - fragment.position;
+	vec3 halfway = normalize(lightDir + viewDir);
+	float dist = length(lightDir);
+	dist = dist * dist;
+	lightDir = normalize(lightDir);
+	float normal_halfway = dot(halfway, fragment.normal);
+
+	vec4 result = vec4(ambientColor + (objectColor * normal_halfway)/dist ,1.0);
 
 	if (wireframeEnabled)
 	{
