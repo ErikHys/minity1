@@ -20,20 +20,33 @@ in fragmentData
 
 out vec4 fragColor;
 
+vec3 getAmbientColor(vec3 objectColor){
+	float ambientLight = 0.3;
+	return ambientLight * lightColor * objectColor;
+}
+
+vec3 getDiffuse(vec3 lightDir){
+	vec3 norm = normalize(fragment.normal);
+	float diff = max(dot(norm, lightDir), 0.0);
+	return diff * lightColor;
+}
+
+vec3 getBlinnPhong(vec3 viewDir, vec3 lightDir, float specularStrength){
+	vec3 halfway = normalize(lightDir + viewDir);
+	float normal_halfway =pow(max(dot(halfway, fragment.normal), 0), 68);
+	return specularStrength * normal_halfway * lightColor;
+}
+
 void main()
 {
-	vec3 objectColor = vec3(1.0,1.0,1.0);
-	float ambientLight = 0.1;
-	vec3 ambientColor = ambientLight * lightColor * objectColor;
-	vec3 lightDir = worldLightPosition - fragment.position;
-	vec3 viewDir = worldCameraPosition - fragment.position;
-	vec3 halfway = normalize(lightDir + viewDir);
-	float dist = length(lightDir);
-	dist = dist * dist;
-	lightDir = normalize(lightDir);
-	float normal_halfway = dot(halfway, fragment.normal);
-
-	vec4 result = vec4(ambientColor + (objectColor * normal_halfway)/dist ,1.0);
+	float specStrength = 0.7;
+	vec3 objectColor = vec3(0.5, 0.0, 0.5);
+	vec3 ambientColor = getAmbientColor(objectColor);
+	vec3 lightDir = normalize(worldLightPosition - fragment.position);
+	vec3 diffuse = getDiffuse(lightDir);
+	vec3 viewDir = normalize(worldCameraPosition - fragment.position);
+	vec3 specular = getBlinnPhong(viewDir, lightDir, specStrength);
+	vec4 result = vec4((ambientColor + diffuse + specular) * objectColor,1.0);
 
 	if (wireframeEnabled)
 	{

@@ -61,7 +61,7 @@ void ModelRenderer::display()
 	const mat3 normalMatrix = mat3(transpose(inverseModelViewMatrix));
 	const mat3 inverseNormalMatrix = inverse(normalMatrix);
 	const vec2 viewportSize = viewer()->viewportSize();
-    const vec3 lightColor = vec3 (1., 0.0, 0.);
+    const vec3 lightColor = vec3 (1.0, 1.0, 1.0);
 
 
     auto shaderProgramModelBase = shaderProgram("model-base");
