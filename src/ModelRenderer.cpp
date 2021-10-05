@@ -61,7 +61,7 @@ void ModelRenderer::display()
 	const mat3 normalMatrix = mat3(transpose(inverseModelViewMatrix));
 	const mat3 inverseNormalMatrix = inverse(normalMatrix);
 	const vec2 viewportSize = viewer()->viewportSize();
-    const vec3 lightColor = vec3 (1.0, 1.0, 1.0);
+
 
 
     auto shaderProgramModelBase = shaderProgram("model-base");
@@ -75,16 +75,27 @@ void ModelRenderer::display()
 	const std::vector<Material> & materials = viewer()->scene()->model()->materials();
 
 	static std::vector<bool> groupEnabled(groups.size(), true);
-	static bool wireframeEnabled = true;
+	static bool wireframeEnabled = false;
 	static bool lightSourceEnabled = true;
 	static vec4 wireframeLineColor = vec4(1.0f);
+    static float shininess = 68;
+    static float lightIntensity = 1.0;
+    static vec3 lightColor = vec3 (1.0, 1.0, 1.0);
+    static bool celShading = false;
 
-	if (ImGui::BeginMenu("Model"))
+
+
+    if (ImGui::BeginMenu("Model"))
 	{
 		ImGui::Checkbox("Wireframe Enabled", &wireframeEnabled);
 		ImGui::Checkbox("Light Source Enabled", &lightSourceEnabled);
+        ImGui::SliderFloat("Shininess", &shininess, 1.0f, 256.0f);
+        ImGui::SliderFloat("Light intensity", &lightIntensity, 0.0f, 1.0f);
+        ImGui::ColorEdit3("Light Color", (float*) &lightColor);
+        ImGui::Checkbox("Cel shading Enabled", &celShading);
 
-		if (wireframeEnabled)
+
+        if (wireframeEnabled)
 		{
 			if (ImGui::CollapsingHeader("Wireframe"))
 			{
@@ -115,6 +126,9 @@ void ModelRenderer::display()
 	shaderProgramModelBase->setUniform("wireframeEnabled", wireframeEnabled);
 	shaderProgramModelBase->setUniform("wireframeLineColor", wireframeLineColor);
     shaderProgramModelBase->setUniform("lightColor", lightColor);
+    shaderProgramModelBase->setUniform("lightIntensity", lightIntensity);
+    shaderProgramModelBase->setUniform("shininess", shininess);
+    shaderProgramModelBase->setUniform("celShading", celShading);
 
 
     shaderProgramModelBase->use();
@@ -151,6 +165,7 @@ void ModelRenderer::display()
 		auto shaderProgramModelLight = shaderProgram("model-light");
 		shaderProgramModelLight->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix * inverseModelLightMatrix);
 		shaderProgramModelLight->setUniform("viewportSize", viewportSize);
+        shaderProgramModelLight->setUniform("lightColor", lightColor);
 
 		glEnable(GL_PROGRAM_POINT_SIZE);
 		glEnable(GL_BLEND);
