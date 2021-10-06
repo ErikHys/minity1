@@ -32,6 +32,17 @@
 
 * added a ball, which was slightly uneven
 
+# Extra
+* Cel shading
+  * First I get the angle with the dot product between the light and fragment normal
+  * Then I multiply the angle with the number of levels I want in the cel shading, where the levels are how many "layers/levels"
+  of shade I want, and I take the ceiling of that.
+  * Then I add a black line if the angle*levels modulo 1 is < 0.04 or > 0.96. this is to create a border between each level.
+* Three point light
+  * I do the same shading as usual but add a backlight opposite the world camera, -worldCameraPosition. Then a fill light
+  as a reflect of - worldLightPosition, -worldCameraPosition
+
+
 # Results
 
 ## Skull model only Blinn Phong front(key) light <br>
