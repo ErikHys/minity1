@@ -78,10 +78,13 @@ void ModelRenderer::display()
 	static bool wireframeEnabled = false;
 	static bool lightSourceEnabled = true;
 	static vec4 wireframeLineColor = vec4(1.0f);
-    static float shininess = 68;
-    static float lightIntensity = 1.0;
+    static float shininess = 68.0;
+    static float lightIntensityFront = 1.0;
+    static float lightIntensityBack = 0.7;
+    static float lightIntensitySide = 0.7;
     static vec3 lightColor = vec3 (1.0, 1.0, 1.0);
     static bool celShading = false;
+    static int levelOfCelShading = 5;
 
 
 
@@ -89,10 +92,13 @@ void ModelRenderer::display()
 	{
 		ImGui::Checkbox("Wireframe Enabled", &wireframeEnabled);
 		ImGui::Checkbox("Light Source Enabled", &lightSourceEnabled);
-        ImGui::SliderFloat("Shininess", &shininess, 1.0f, 256.0f);
-        ImGui::SliderFloat("Light intensity", &lightIntensity, 0.0f, 1.0f);
-        ImGui::ColorEdit3("Light Color", (float*) &lightColor);
         ImGui::Checkbox("Cel shading Enabled", &celShading);
+        ImGui::SliderInt("Level of cel shading", &levelOfCelShading, 1, 10);
+        ImGui::SliderFloat("Shininess", &shininess, 1.0f, 128.0f);
+        ImGui::SliderFloat("Light intensity front", &lightIntensityFront, 0.0f, 2.0f);
+        ImGui::SliderFloat("Light intensity back", &lightIntensityBack, 0.0f, 2.0f);
+        ImGui::SliderFloat("Light intensity side", &lightIntensitySide, 0.0f, 2.0f);
+        ImGui::ColorEdit3("Light Color", (float*) &lightColor);
 
 
         if (wireframeEnabled)
@@ -126,9 +132,12 @@ void ModelRenderer::display()
 	shaderProgramModelBase->setUniform("wireframeEnabled", wireframeEnabled);
 	shaderProgramModelBase->setUniform("wireframeLineColor", wireframeLineColor);
     shaderProgramModelBase->setUniform("lightColor", lightColor);
-    shaderProgramModelBase->setUniform("lightIntensity", lightIntensity);
+    shaderProgramModelBase->setUniform("lightIntensityFront", lightIntensityFront);
+    shaderProgramModelBase->setUniform("lightIntensityBack", lightIntensityBack);
+    shaderProgramModelBase->setUniform("lightIntensitySide", lightIntensitySide);
     shaderProgramModelBase->setUniform("shininess", shininess);
     shaderProgramModelBase->setUniform("celShading", celShading);
+    shaderProgramModelBase->setUniform("levelOfCelShading", levelOfCelShading);
 
 
     shaderProgramModelBase->use();
