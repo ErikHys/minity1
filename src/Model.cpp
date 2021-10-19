@@ -121,6 +121,10 @@ public:
 		std::string map_d;
 		// Bump Map
 		std::string map_bump;
+		// ObjectNormal Map
+		std::string map_ObjectNormals;
+		// TangentNormal Map
+		std::string map_tangentNormals;
 	};
 
 	bool loadObjFile(const std::string & filename)
@@ -661,7 +665,30 @@ public:
 
 				newMaterial.bumpTexture = std::move(loadTexture(texturePath.string()));
 			}
+            if (!m.map_ObjectNormals.empty())
+            {
+                std::filesystem::path texturePath = m.map_ObjectNormals;
 
+                if (!texturePath.is_absolute())
+                {
+                    texturePath = path.parent_path();
+                    texturePath.append(m.map_ObjectNormals);
+                }
+
+                newMaterial.objectNormal = std::move(loadTexture(texturePath.string()));
+            }
+            if (!m.map_tangentNormals.empty())
+            {
+                std::filesystem::path texturePath = m.map_tangentNormals;
+
+                if (!texturePath.is_absolute())
+                {
+                    texturePath = path.parent_path();
+                    texturePath.append(m.map_tangentNormals);
+                }
+
+                newMaterial.tangentNormal = std::move(loadTexture(texturePath.string()));
+            }
 			m_materials.push_back(newMaterial);
 
 		}
@@ -814,6 +841,24 @@ public:
 							materials[currentMaterialIndex].map_bump = map_bump;
 						}
 					}
+                    else if (token == "map_ObjectNormals" || buffer == "map_ObjectNormals" || buffer == "ObjectNormals")
+                    {
+                        std::string map_ObjectNormals;
+                        if (getline(iss, map_ObjectNormals))
+                        {
+                            map_ObjectNormals = trim(map_ObjectNormals);
+                            materials[currentMaterialIndex].map_ObjectNormals = map_ObjectNormals;
+                        }
+                    }
+                    else if (token == "map_TangentNormals" || buffer == "map_TangentNormals" || buffer == "TangentNormals")
+                    {
+                        std::string map_TangentNormals;
+                        if (getline(iss, map_TangentNormals))
+                        {
+                            map_TangentNormals = trim(map_TangentNormals);
+                            materials[currentMaterialIndex].map_tangentNormals = map_TangentNormals;
+                        }
+                    }
 				}
 			}
 		}

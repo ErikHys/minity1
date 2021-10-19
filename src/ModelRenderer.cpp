@@ -80,8 +80,8 @@ void ModelRenderer::display()
 	static vec4 wireframeLineColor = vec4(1.0f);
     static float shininess = 68.0;
     static float lightIntensityFront = 1.0;
-    static float lightIntensityBack = 0.7;
-    static float lightIntensitySide = 0.7;
+    static float lightIntensityBack = 0.7f;
+    static float lightIntensitySide = 0.7f;
     static vec3 lightColor = vec3 (1.0, 1.0, 1.0);
     static bool celShading = false;
     static int levelOfCelShading = 5;
@@ -154,13 +154,48 @@ void ModelRenderer::display()
 				shaderProgramModelBase->setUniform("diffuseTexture", 0);
 				material.diffuseTexture->bindActive(0);
 			}
-
+            if (material.ambientTexture)
+            {
+                shaderProgramModelBase->setUniform("ambientTexture", 0);
+                material.ambientTexture->bindActive(0);
+            }
+            if (material.specularTexture)
+            {
+                shaderProgramModelBase->setUniform("specularTexture", 0);
+                material.specularTexture->bindActive(0);
+            }
+            if (material.objectNormal)
+            {
+                shaderProgramModelBase->setUniform("objectNormal", 0);
+                material.objectNormal->bindActive(0);
+            }
+            if (material.tangentNormal)
+            {
+                shaderProgramModelBase->setUniform("tangentNormal", 0);
+                material.tangentNormal->bindActive(0);
+            }
 			viewer()->scene()->model()->vertexArray().drawElements(GL_TRIANGLES, groups.at(i).count(), GL_UNSIGNED_INT, (void*)(sizeof(GLuint)*groups.at(i).startIndex));
 
 			if (material.diffuseTexture)
 			{
 				material.diffuseTexture->unbind();
 			}
+            if (material.ambientTexture)
+            {
+                material.ambientTexture->unbind();
+            }
+            if (material.specularTexture)
+            {
+                material.specularTexture->unbind();
+            }
+            if (material.objectNormal)
+            {
+                material.objectNormal->unbind();
+            }
+            if (material.tangentNormal)
+            {
+                material.tangentNormal->unbind();
+            }
 		}
 	}
 

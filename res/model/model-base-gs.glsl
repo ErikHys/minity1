@@ -20,6 +20,7 @@ out fragmentData
 	vec3 normal;
 	vec2 texCoord;
 	noperspective vec3 edgeDistance;
+	mat3 TBN;
 } fragment;
 
 void main(void)
@@ -35,6 +36,19 @@ void main(void)
 	v[2] = p[1]-p[0];
 
 	float area = abs(v[1].x*v[2].y - v[1].y * v[2].x);
+	vec3 edge1 = vertices[1].position - vertices[0].position;
+	vec3 edge2 = vertices[2].position - vertices[0].position;
+	vec2 delta1 = vertices[1].texCoord - vertices[0].texCoord;
+	vec2 delta2 = vertices[2].texCoord - vertices[0].texCoord;
+	float f = 1.0f / (delta1.x * delta2.y - delta2.x * delta1.y);
+	vec3 tangent = vec3(0.0);
+	tangent.x = f * (delta2.y * edge1.x - delta1.y * edge2.x);
+	tangent.y = f * (delta2.y * edge1.y - delta1.y * edge2.y);
+	tangent.z = f * (delta2.y * edge1.z - delta1.y * edge2.z);
+	vec3 bitangent = vec3(0.0);
+	bitangent.x = f * (-delta2.y * edge1.x + delta1.y * edge2.x);
+	bitangent.y = f * (-delta2.y * edge1.y + delta1.y * edge2.y);
+	bitangent.z = f * (-delta2.y * edge1.z + delta1.y * edge2.z);
 
 	for (int i=0;i<3;i++)
 	{
@@ -42,6 +56,7 @@ void main(void)
 		fragment.position = vertices[i].position;
 		fragment.normal = vertices[i].normal;
 		fragment.texCoord = vertices[i].texCoord;
+		fragment.TBN = mat3(tangent, bitangent, vertices[i].normal);
 		
 		vec3 ed = vec3(0.0);
 		ed[i] = area / length(v[i]);
