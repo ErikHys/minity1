@@ -19,6 +19,9 @@ uniform float lightIntensitySide;
 uniform float lightIntensityBack;
 uniform bool celShading;
 uniform int levelOfCelShading;
+uniform int mapping;
+uniform bool bumps;
+uniform vec2 akBumps;
 
 in fragmentData
 {
@@ -26,7 +29,8 @@ in fragmentData
 	vec3 normal;
 	vec2 texCoord;
 	noperspective vec3 edgeDistance;
-	mat3 TBN;
+	vec3 tangent;
+	vec3 bitangent;
 } fragment;
 
 out vec4 fragColor;
@@ -71,12 +75,22 @@ vec4 getShading(vec3 lightPos, float lightIntensity, vec3 normal){
 	return vec4((ambientColor + diffuse + specular) * objectColor * lightIntensity, 1.0);
 }
 
+
 void main()
 {
 	vec3 backlight = -worldCameraPosition;
-	vec3 normal = normalize(fragment.TBN * texture(tangentNormal, fragment.texCoord).rgb);
-//	vec3 normal = texture(objectNormal, fragment.texCoord).rgb;
-//	vec3 normal = fragment.normal;
+	vec3 norm = texture(objectNormal, fragment.texCoord).rgb;
+	vec3 normal = normalize(norm*2 - 1);
+	if(mapping == 1){
+		vec3 norm = texture(objectNormal, fragment.texCoord).rgb;
+		vec3 normal = normalize(norm*2 - 1);
+	}else if(mapping == 2){
+		mat3 TBN = mat3(fragment.tangent, fragment.bitangent, normalize(fragment.normal));
+		vec3 norm = texture(tangentNormal, fragment.texCoord).rgb * 2 - 1;
+		vec3 normal = normalize(TBN * norm);
+	}else{
+		vec3 normal = fragment.normal;
+	}
 	vec3 fillingLightPosition = reflect(-worldLightPosition, -worldCameraPosition);
 
 	vec4 frontShade = getShading(worldLightPosition, lightIntensityFront, normal);
@@ -92,7 +106,9 @@ void main()
 	}
 
 	vec4 result = frontShade + backShade + fillShade;
-//	result.rgb *= texture(diffuseTexture, fragment.texCoord).rgb * texture(specularTexture, fragment.texCoord).rgb  * texture(ambientTexture, fragment.texCoord).rgb;
+	if (mapping == 0){
+		result.rgb *= texture(diffuseTexture, fragment.texCoord).rgb * texture(specularTexture, fragment.texCoord).rgb  * texture(ambientTexture, fragment.texCoord).rgb;
+	}
 	if (wireframeEnabled)
 	{
 		float smallestDistance = min(min(fragment.edgeDistance[0],fragment.edgeDistance[1]),fragment.edgeDistance[2]);

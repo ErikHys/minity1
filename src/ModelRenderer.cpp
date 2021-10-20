@@ -80,11 +80,14 @@ void ModelRenderer::display()
 	static vec4 wireframeLineColor = vec4(1.0f);
     static float shininess = 68.0;
     static float lightIntensityFront = 1.0;
-    static float lightIntensityBack = 0.7f;
-    static float lightIntensitySide = 0.7f;
+    static float lightIntensityBack = 0.0f;
+    static float lightIntensitySide = 0.0f;
     static vec3 lightColor = vec3 (1.0, 1.0, 1.0);
     static bool celShading = false;
     static int levelOfCelShading = 5;
+    static int mapping = 0;
+    static bool bumps = false;
+    static vec2 akBumps = vec2(0.0f, 0.0f);
 
 
 
@@ -94,11 +97,15 @@ void ModelRenderer::display()
 		ImGui::Checkbox("Light Source Enabled", &lightSourceEnabled);
         ImGui::Checkbox("Cel shading Enabled", &celShading);
         ImGui::SliderInt("Level of cel shading", &levelOfCelShading, 1, 10);
-        ImGui::SliderFloat("Shininess", &shininess, 1.0f, 128.0f);
+        ImGui::SliderFloat("Shininess", &shininess, 1.0f, 256.0f);
         ImGui::SliderFloat("Light intensity front", &lightIntensityFront, 0.0f, 2.0f);
         ImGui::SliderFloat("Light intensity back", &lightIntensityBack, 0.0f, 2.0f);
         ImGui::SliderFloat("Light intensity side", &lightIntensitySide, 0.0f, 2.0f);
         ImGui::ColorEdit3("Light Color", (float*) &lightColor);
+        ImGui::SliderInt("Which mapping, standard, object, tangent", &mapping, 0, 2);
+        ImGui::Checkbox("Bump mapping", &bumps);
+        ImGui::DragFloat2("Bump A and k", (float*) &akBumps);
+
 
 
         if (wireframeEnabled)
@@ -138,6 +145,11 @@ void ModelRenderer::display()
     shaderProgramModelBase->setUniform("shininess", shininess);
     shaderProgramModelBase->setUniform("celShading", celShading);
     shaderProgramModelBase->setUniform("levelOfCelShading", levelOfCelShading);
+    shaderProgramModelBase->setUniform("mapping", mapping);
+    shaderProgramModelBase->setUniform("bumps", bumps);
+    shaderProgramModelBase->setUniform("akBumps", akBumps);
+
+
 
 
     shaderProgramModelBase->use();
