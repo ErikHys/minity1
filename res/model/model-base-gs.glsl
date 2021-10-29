@@ -51,6 +51,8 @@ void main(void)
 	bitangent.x = f * (-delta2.y * edge1.x + delta1.y * edge2.x);
 	bitangent.y = f * (-delta2.y * edge1.y + delta1.y * edge2.y);
 	bitangent.z = f * (-delta2.y * edge1.z + delta1.y * edge2.z);
+	bitangent = normalize(bitangent);
+	tangent = normalize(tangent);
 
 	for (int i=0;i<3;i++)
 	{

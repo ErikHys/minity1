@@ -87,8 +87,7 @@ void ModelRenderer::display()
     static int levelOfCelShading = 5;
     static int mapping = 0;
     static bool bumps = false;
-    static vec2 akBumps = vec2(0.0f, 0.0f);
-
+    static bool textures = false;
 
 
     if (ImGui::BeginMenu("Model"))
@@ -102,9 +101,9 @@ void ModelRenderer::display()
         ImGui::SliderFloat("Light intensity back", &lightIntensityBack, 0.0f, 2.0f);
         ImGui::SliderFloat("Light intensity side", &lightIntensitySide, 0.0f, 2.0f);
         ImGui::ColorEdit3("Light Color", (float*) &lightColor);
+        ImGui::Checkbox("Textures", &textures);
         ImGui::SliderInt("Which mapping, standard, object, tangent", &mapping, 0, 2);
         ImGui::Checkbox("Bump mapping", &bumps);
-        ImGui::DragFloat2("Bump A and k", (float*) &akBumps);
 
 
 
@@ -147,7 +146,7 @@ void ModelRenderer::display()
     shaderProgramModelBase->setUniform("levelOfCelShading", levelOfCelShading);
     shaderProgramModelBase->setUniform("mapping", mapping);
     shaderProgramModelBase->setUniform("bumps", bumps);
-    shaderProgramModelBase->setUniform("akBumps", akBumps);
+    shaderProgramModelBase->setUniform("textures", textures);
 
 
 
@@ -163,51 +162,63 @@ void ModelRenderer::display()
 			shaderProgramModelBase->setUniform("diffuseColor", material.diffuse);
 			if (material.diffuseTexture)
 			{
-				shaderProgramModelBase->setUniform("diffuseTexture", 0);
+                shaderProgramModelBase->setUniform("diffuseTexture", 0);
 				material.diffuseTexture->bindActive(0);
 			}
             if (material.ambientTexture)
             {
-                shaderProgramModelBase->setUniform("ambientTexture", 0);
-                material.ambientTexture->bindActive(0);
+                shaderProgramModelBase->setUniform("ambientTexture", 1);
+                material.ambientTexture->bindActive(1);
             }
             if (material.specularTexture)
             {
-                shaderProgramModelBase->setUniform("specularTexture", 0);
-                material.specularTexture->bindActive(0);
+                shaderProgramModelBase->setUniform("specularTexture", 2);
+                material.specularTexture->bindActive(2);
             }
             if (material.objectNormal)
             {
-                shaderProgramModelBase->setUniform("objectNormal", 0);
-                material.objectNormal->bindActive(0);
+                shaderProgramModelBase->setUniform("objectNormal", 3);
+                material.objectNormal->bindActive(3);
             }
             if (material.tangentNormal)
             {
-                shaderProgramModelBase->setUniform("tangentNormal", 0);
-                material.tangentNormal->bindActive(0);
+                shaderProgramModelBase->setUniform("tangentNormal", 4);
+                material.tangentNormal->bindActive(4);
             }
 			viewer()->scene()->model()->vertexArray().drawElements(GL_TRIANGLES, groups.at(i).count(), GL_UNSIGNED_INT, (void*)(sizeof(GLuint)*groups.at(i).startIndex));
 
-			if (material.diffuseTexture)
-			{
-				material.diffuseTexture->unbind();
-			}
-            if (material.ambientTexture)
+            if (material.tangentNormal)
             {
-                material.ambientTexture->unbind();
-            }
-            if (material.specularTexture)
-            {
-                material.specularTexture->unbind();
+                material.tangentNormal->unbind();
             }
             if (material.objectNormal)
             {
                 material.objectNormal->unbind();
             }
-            if (material.tangentNormal)
+            if (material.specularTexture)
             {
-                material.tangentNormal->unbind();
+                material.specularTexture->unbind();
             }
+            if (material.ambientTexture)
+            {
+                material.ambientTexture->unbind();
+            }
+            if (material.ambientTexture)
+            {
+                material.ambientTexture->unbind();
+            }
+            if (material.ambientTexture)
+            {
+                material.ambientTexture->unbind();
+            }
+			if (material.diffuseTexture)
+			{
+				material.diffuseTexture->unbind();
+			}
+
+
+
+
 		}
 	}
 

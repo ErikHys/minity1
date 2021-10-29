@@ -21,7 +21,7 @@ uniform bool celShading;
 uniform int levelOfCelShading;
 uniform int mapping;
 uniform bool bumps;
-uniform vec2 akBumps;
+uniform bool textures;
 
 in fragmentData
 {
@@ -41,7 +41,7 @@ vec3 getAmbientColor(vec3 objectColor){
 }
 
 vec3 getDiffuse(vec3 lightDir, vec3 normal){
-	vec3 norm = normalize(normal);
+	vec3 norm = normal;
 	float diff = max(dot(norm, lightDir), 0.0);
 	return diff * lightColor;
 }
@@ -54,9 +54,9 @@ vec3 getBlinnPhong(vec3 viewDir, vec3 lightDir, float specularStrength, vec3 nor
 
 float getCelShading(float levels, vec3 lightPos, vec3 normal){
 	vec3 lightDir = normalize(lightPos - fragment.position);
-	float dotLightDirNormal = dot(lightDir, normalize(normal));
-	float blackLine = mod(dotLightDirNormal*levels, 1.0);
-	float level = ceil(dotLightDirNormal*levels);
+	float dotLightDirNormal = max(dot(lightDir, normal), 0);
+	float blackLine = mod(max(dotLightDirNormal*levels, 0), 1.0);
+	float level = ceil(max(dotLightDirNormal, 0)*levels);
 	if ((blackLine < 0.04 || blackLine > 0.96) && level < levels){
 		return 0.05;
 	}
@@ -72,27 +72,45 @@ vec4 getShading(vec3 lightPos, float lightIntensity, vec3 normal){
 	vec3 diffuse = getDiffuse(lightDir, normal);
 	vec3 viewDir = normalize(worldCameraPosition - fragment.position);
 	vec3 specular = getBlinnPhong(viewDir, lightDir, specStrength, normal);
-	return vec4((ambientColor + diffuse + specular) * objectColor * lightIntensity, 1.0);
+	return vec4((0.15 * ambientColor + 0.4 * diffuse +  0.45 * specular) * objectColor * lightIntensity, 1.0);
 }
 
+float getASinKxy(float x, float y){
+	float freq = 1.0f;
+	float amp = 128.0f;
+	float sinU = sin(freq * x);
+	float sinV = sin(freq * y);
+	return amp * pow(sinU, 2) * pow(sinV, 2);
+}
+
+vec2 getBumpMap(){
+	float epsilon = 0.002f;
+	float x = fragment.texCoord.x;
+	float y = fragment.texCoord.y;
+	return vec2(getASinKxy(x, y), getASinKxy(x, y));
+
+}
 
 void main()
 {
 	vec3 backlight = -worldCameraPosition;
-	vec3 norm = texture(objectNormal, fragment.texCoord).rgb;
-	vec3 normal = normalize(norm*2 - 1);
+	vec3 normal = normalize(fragment.normal);
 	if(mapping == 1){
 		vec3 norm = texture(objectNormal, fragment.texCoord).rgb;
-		vec3 normal = normalize(norm*2 - 1);
+		normal = normalize(norm*2 - 1);
 	}else if(mapping == 2){
+		//Only works paritally
 		mat3 TBN = mat3(fragment.tangent, fragment.bitangent, normalize(fragment.normal));
-		vec3 norm = texture(tangentNormal, fragment.texCoord).rgb * 2 - 1;
-		vec3 normal = normalize(TBN * norm);
-	}else{
-		vec3 normal = fragment.normal;
+		vec3 norm = normalize(texture(tangentNormal, fragment.texCoord).rgb * 2.0 - 1.0);
+		normal = normalize(TBN * norm);
 	}
-	vec3 fillingLightPosition = reflect(-worldLightPosition, -worldCameraPosition);
+	if (bumps){
+		//Does not work...
+		mat3 TBN = mat3(fragment.tangent, fragment.bitangent, fragment.normal);
+		normal = normalize(TBN * vec3(getBumpMap(), 1.0f));
+	}
 
+	vec3 fillingLightPosition = reflect(-worldLightPosition, -worldCameraPosition);
 	vec4 frontShade = getShading(worldLightPosition, lightIntensityFront, normal);
 	vec4 backShade = getShading(backlight, lightIntensityBack, normal);
 	vec4 fillShade = getShading(fillingLightPosition, lightIntensitySide, normal);
@@ -106,8 +124,8 @@ void main()
 	}
 
 	vec4 result = frontShade + backShade + fillShade;
-	if (mapping == 0){
-		result.rgb *= texture(diffuseTexture, fragment.texCoord).rgb * texture(specularTexture, fragment.texCoord).rgb  * texture(ambientTexture, fragment.texCoord).rgb;
+	if (textures){
+		result.rgb *= (texture(diffuseTexture, fragment.texCoord).rgb * texture(specularTexture, fragment.texCoord).rgb  * texture(ambientTexture, fragment.texCoord).rgb);
 	}
 	if (wireframeEnabled)
 	{
