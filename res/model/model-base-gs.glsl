@@ -22,6 +22,7 @@ out fragmentData
 	noperspective vec3 edgeDistance;
 	vec3 tangent;
 	vec3 bitangent;
+	mat3 TBN;
 } fragment;
 
 void main(void)
@@ -62,6 +63,7 @@ void main(void)
 		fragment.texCoord = vertices[i].texCoord;
 		fragment.tangent = tangent;
 		fragment.bitangent = bitangent;
+		fragment.TBN = mat3(tangent, bitangent, vertices[i].normal);
 		
 		vec3 ed = vec3(0.0);
 		ed[i] = area / length(v[i]);

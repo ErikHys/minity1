@@ -1,4 +1,4 @@
-#version 400
+#version 450
 #extension GL_ARB_shading_language_include : require
 #include "/model-globals.glsl"
 
@@ -31,6 +31,7 @@ in fragmentData
 	noperspective vec3 edgeDistance;
 	vec3 tangent;
 	vec3 bitangent;
+	mat3 TBN;
 } fragment;
 
 out vec4 fragColor;
@@ -75,40 +76,37 @@ vec4 getShading(vec3 lightPos, float lightIntensity, vec3 normal){
 	return vec4((0.15 * ambientColor + 0.4 * diffuse +  0.45 * specular) * objectColor * lightIntensity, 1.0);
 }
 
-float getASinKxy(float x, float y){
-	float freq = 1.0f;
-	float amp = 128.0f;
-	float sinU = sin(freq * x);
-	float sinV = sin(freq * y);
+float getProcedualBumps(float amp, float k, vec2 txc){
+	float sinU = sin(k * txc.x);
+	float sinV = sin(k * txc.y);
 	return amp * pow(sinU, 2) * pow(sinV, 2);
-}
-
-vec2 getBumpMap(){
-	float epsilon = 0.002f;
-	float x = fragment.texCoord.x;
-	float y = fragment.texCoord.y;
-	return vec2(getASinKxy(x, y), getASinKxy(x, y));
-
 }
 
 void main()
 {
 	vec3 backlight = -worldCameraPosition;
 	vec3 normal = normalize(fragment.normal);
+
+
+	vec3 norm = normalize(texture(tangentNormal, fragment.texCoord).rgb * 2.0 - 1.0);
+	vec3 bitangent = normalize(cross(normal, fragment.tangent));
+	vec3 tangent = normalize(cross(bitangent, normal));
+	mat3 TBN = mat3(tangent, bitangent, normal);
+
+	if (bumps){
+		//Does not work...
+
+		float bu = dFdxFine(getProcedualBumps(1.0, 128.0, fragment.texCoord));
+		float bv = dFdyFine(getProcedualBumps(1.0, 128.0, fragment.texCoord));
+		norm = norm + bu * bitangent + bv * tangent;
+	}
 	if(mapping == 1){
-		vec3 norm = texture(objectNormal, fragment.texCoord).rgb;
 		normal = normalize(norm*2 - 1);
 	}else if(mapping == 2){
 		//Only works paritally
-		mat3 TBN = mat3(fragment.tangent, fragment.bitangent, normalize(fragment.normal));
-		vec3 norm = normalize(texture(tangentNormal, fragment.texCoord).rgb * 2.0 - 1.0);
 		normal = normalize(TBN * norm);
 	}
-	if (bumps){
-		//Does not work...
-		mat3 TBN = mat3(fragment.tangent, fragment.bitangent, fragment.normal);
-		normal = normalize(TBN * vec3(getBumpMap(), 1.0f));
-	}
+
 
 	vec3 fillingLightPosition = reflect(-worldLightPosition, -worldCameraPosition);
 	vec4 frontShade = getShading(worldLightPosition, lightIntensityFront, normal);
