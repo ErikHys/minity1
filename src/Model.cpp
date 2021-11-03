@@ -602,10 +602,10 @@ public:
         for (auto & m : materials)
         {
             Material newMaterial;
-            newMaterial.ambient = m.Ka;
-            newMaterial.diffuse = m.Kd;
-            newMaterial.specular = m.Ks;
-            newMaterial.shininess = m.Ns;
+            newMaterial.ambient = m.Ka != vec3(0.0) ? m.Ka : vec3(1.0);
+            newMaterial.diffuse = m.Kd != vec3(0.0) ? m.Kd : vec3(1.0);
+            newMaterial.specular =  m.Ks != vec3(0.0) ? m.Ks : vec3(1.0);
+            newMaterial.shininess = m.Ns != 0.0 ? m.Ns : 64.0;
 
             if (!m.map_Ka.empty())
             {
