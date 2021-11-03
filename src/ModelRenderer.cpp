@@ -78,7 +78,6 @@ void ModelRenderer::display()
 	static bool wireframeEnabled = false;
 	static bool lightSourceEnabled = true;
 	static vec4 wireframeLineColor = vec4(1.0f);
-    static float shininess = 68.0;
     static float lightIntensityFront = 1.0;
     static float lightIntensityBack = 0.0f;
     static float lightIntensitySide = 0.0f;
@@ -88,22 +87,33 @@ void ModelRenderer::display()
     static int mapping = 0;
     static bool bumps = false;
     static bool textures = false;
+    static float explosionDist = 0.f;
+    static float amplitude = 1.f;
+    static float frequency = 128.f;
 
 
     if (ImGui::BeginMenu("Model"))
 	{
 		ImGui::Checkbox("Wireframe Enabled", &wireframeEnabled);
 		ImGui::Checkbox("Light Source Enabled", &lightSourceEnabled);
+        ImGui::ColorEdit3("Light Color", (float*) &lightColor);
         ImGui::Checkbox("Cel shading Enabled", &celShading);
         ImGui::SliderInt("Level of cel shading", &levelOfCelShading, 1, 10);
-        ImGui::SliderFloat("Shininess", &shininess, 1.0f, 256.0f);
-        ImGui::SliderFloat("Light intensity front", &lightIntensityFront, 0.0f, 2.0f);
-        ImGui::SliderFloat("Light intensity back", &lightIntensityBack, 0.0f, 2.0f);
-        ImGui::SliderFloat("Light intensity side", &lightIntensitySide, 0.0f, 2.0f);
-        ImGui::ColorEdit3("Light Color", (float*) &lightColor);
+        if(ImGui::CollapsingHeader("Light intensity")){
+            ImGui::SliderFloat("Light intensity front", &lightIntensityFront, 0.0f, 2.0f);
+            ImGui::SliderFloat("Light intensity back", &lightIntensityBack, 0.0f, 2.0f);
+            ImGui::SliderFloat("Light intensity side", &lightIntensitySide, 0.0f, 2.0f);
+        }
         ImGui::Checkbox("Textures", &textures);
         ImGui::SliderInt("Which mapping, standard, object, tangent", &mapping, 0, 2);
-        ImGui::Checkbox("Bump mapping", &bumps);
+        ImGui::SliderFloat("Explosion", &explosionDist, 0.0, 1.0);
+        if(ImGui::CollapsingHeader("Bumps")){
+            ImGui::Checkbox("Bump mapping", &bumps);
+            ImGui::SliderFloat("Amplitude", &amplitude, 0.0, 1.0);
+            ImGui::SliderFloat("Frequency", &frequency, 0.0, 1.0);
+        }
+
+
 
 
 
@@ -137,16 +147,19 @@ void ModelRenderer::display()
 	shaderProgramModelBase->setUniform("worldLightPosition", vec3(worldLightPosition));
 	shaderProgramModelBase->setUniform("wireframeEnabled", wireframeEnabled);
 	shaderProgramModelBase->setUniform("wireframeLineColor", wireframeLineColor);
-    shaderProgramModelBase->setUniform("lightColor", lightColor);
     shaderProgramModelBase->setUniform("lightIntensityFront", lightIntensityFront);
     shaderProgramModelBase->setUniform("lightIntensityBack", lightIntensityBack);
     shaderProgramModelBase->setUniform("lightIntensitySide", lightIntensitySide);
-    shaderProgramModelBase->setUniform("shininess", shininess);
+    shaderProgramModelBase->setUniform("lightColor", lightColor);
     shaderProgramModelBase->setUniform("celShading", celShading);
     shaderProgramModelBase->setUniform("levelOfCelShading", levelOfCelShading);
     shaderProgramModelBase->setUniform("mapping", mapping);
     shaderProgramModelBase->setUniform("bumps", bumps);
     shaderProgramModelBase->setUniform("textures", textures);
+    shaderProgramModelBase->setUniform("modelMidPoint", viewer()->scene()->model()->midpoint());
+    shaderProgramModelBase->setUniform("explosionDist", explosionDist);
+    shaderProgramModelBase->setUniform("amplitude", amplitude);
+    shaderProgramModelBase->setUniform("frequency", frequency);
 
 
 
@@ -159,8 +172,12 @@ void ModelRenderer::display()
 		{
 			const Material & material = materials.at(groups.at(i).materialIndex);
 
-			shaderProgramModelBase->setUniform("diffuseColor", material.diffuse);
-			if (material.diffuseTexture)
+			shaderProgramModelBase->setUniform("ambientLightColor", material.ambient);
+            shaderProgramModelBase->setUniform("diffuseLightColor", material.diffuse);
+            shaderProgramModelBase->setUniform("specularLightColor", material.specular);
+            shaderProgramModelBase->setUniform("shininess", material.shininess);
+
+            if (material.diffuseTexture)
 			{
                 shaderProgramModelBase->setUniform("diffuseTexture", 0);
 				material.diffuseTexture->bindActive(0);
@@ -185,7 +202,9 @@ void ModelRenderer::display()
                 shaderProgramModelBase->setUniform("tangentNormal", 4);
                 material.tangentNormal->bindActive(4);
             }
-			viewer()->scene()->model()->vertexArray().drawElements(GL_TRIANGLES, groups.at(i).count(), GL_UNSIGNED_INT, (void*)(sizeof(GLuint)*groups.at(i).startIndex));
+            shaderProgramModelBase->setUniform("groupMidPoint", groups[i].midpoint);
+
+            viewer()->scene()->model()->vertexArray().drawElements(GL_TRIANGLES, groups.at(i).count(), GL_UNSIGNED_INT, (void*)(sizeof(GLuint)*groups.at(i).startIndex));
 
             if (material.tangentNormal)
             {

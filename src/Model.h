@@ -26,6 +26,7 @@ namespace minity
 		glm::uint materialIndex = 0;
 		glm::uint startIndex = 0;
 		glm::uint endIndex = 0;
+		glm::vec3 midpoint = glm::vec3();
 		
 		glm::uint count() const
 		{
@@ -46,7 +47,6 @@ namespace minity
 		std::shared_ptr<globjects::Texture> diffuseTexture;
 		std::shared_ptr<globjects::Texture> specularTexture;
 		std::shared_ptr<globjects::Texture> shininessTexture;
-		std::shared_ptr<globjects::Texture> bumpTexture;
         std::shared_ptr<globjects::Texture> objectNormal;
         std::shared_ptr<globjects::Texture> tangentNormal;
     };
@@ -66,6 +66,7 @@ namespace minity
 
 		glm::vec3 minimumBounds() const;
 		glm::vec3 maximumBounds() const;
+		glm::vec3 midpoint() const;
 
 		globjects::VertexArray & vertexArray();
 		globjects::Buffer & vertexBuffer();
@@ -82,8 +83,9 @@ namespace minity
 
 		glm::vec3 m_minimumBounds = glm::vec3(0.0);
 		glm::vec3 m_maximumBounds = glm::vec3(0.0);
+        glm::vec3 m_midPoint = glm::vec3();
 
-		std::unique_ptr<globjects::VertexArray> m_vertexArray = std::make_unique<globjects::VertexArray>();
+        std::unique_ptr<globjects::VertexArray> m_vertexArray = std::make_unique<globjects::VertexArray>();
 		std::unique_ptr<globjects::Buffer> m_vertexBuffer = std::make_unique<globjects::Buffer>();
 		std::unique_ptr< globjects::Buffer > m_indexBuffer = std::make_unique<globjects::Buffer>();
 

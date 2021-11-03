@@ -91,6 +91,7 @@ public:
         std::vector<uint> positionIndices;
         std::vector<uint> normalIndices;
         std::vector<uint> texCoordIndices;
+
     };
 
     struct ObjMaterial
@@ -548,7 +549,8 @@ public:
                 Group newGroup;
                 newGroup.name = i->name;
                 newGroup.startIndex = uint(m_indices.size());
-
+                glm::vec3 maxValues = glm::vec3(std::numeric_limits<float>::min());
+                glm::vec3 minValues = glm::vec3(std::numeric_limits<float>::max());
                 std::unordered_map<std::string, int>::iterator j = materialMap.find(i->material);
 
                 if (j != materialMap.end())
@@ -583,8 +585,12 @@ public:
                         m_vertices[index] = vertex;
                         m_indices.push_back(index);
                     }
-                }
 
+                    maxValues = glm::vec3(std::max(maxValues.x, vertex.position.x), std::max(maxValues.y, vertex.position.y), std::max(maxValues.z, vertex.position.z));
+                    minValues = glm::vec3(std::min(maxValues.x, vertex.position.x), std::min(maxValues.y, vertex.position.y), std::min(maxValues.z, vertex.position.z));
+
+                }
+                newGroup.midpoint = (maxValues + minValues) * 0.5f;
                 newGroup.endIndex = uint(m_indices.size());
                 m_groups.push_back(newGroup);
             }
@@ -651,19 +657,6 @@ public:
                 }
 
                 newMaterial.shininessTexture = std::move(loadTexture(texturePath.string()));
-            }
-
-            if (!m.map_bump.empty())
-            {
-                std::filesystem::path texturePath = m.map_bump;
-
-                if (!texturePath.is_absolute())
-                {
-                    texturePath = path.parent_path();
-                    texturePath.append(m.map_bump);
-                }
-
-                newMaterial.bumpTexture = std::move(loadTexture(texturePath.string()));
             }
             if (!m.map_ObjectNormals.empty())
             {
@@ -1046,6 +1039,10 @@ vec3 Model::maximumBounds() const
     return m_maximumBounds;
 }
 
+vec3 Model::midpoint() const
+{
+    return (m_maximumBounds + m_minimumBounds) * 0.5f;
+}
 VertexArray & Model::vertexArray()
 {
     return *m_vertexArray.get();

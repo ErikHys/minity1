@@ -3,6 +3,9 @@
 #include "/model-globals.glsl"
 
 uniform mat4 modelViewProjectionMatrix;
+uniform vec3 modelMidPoint;
+uniform vec3 groupMidPoint;
+uniform float explosionDist;
 
 in vec3 position;
 in vec3 normal;
@@ -17,7 +20,8 @@ out vertexData
 
 void main()
 {
-	vec4 pos = modelViewProjectionMatrix*vec4(position,1.0);
+	vec3 newPosition = position + (groupMidPoint - modelMidPoint) * explosionDist;
+	vec4 pos = modelViewProjectionMatrix*vec4(newPosition,1.0);
 
 	vertex.position = position; 
 	vertex.normal = normal;

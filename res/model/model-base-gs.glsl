@@ -6,6 +6,8 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
 uniform vec2 viewportSize;
+uniform vec3 modelMidPoint;
+uniform vec3 groupMidPoint;
 
 in vertexData
 {
