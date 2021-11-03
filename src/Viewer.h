@@ -35,16 +35,17 @@ namespace minity
 
 		void setBackgroundColor(const glm::vec3& c);
 		void setViewTransform(const glm::mat4& m);
+		void setViewPortSize(const glm::vec2 vps);
 		void setModelTransform(const glm::mat4& m);
 		void setLightTransform(const glm::mat4& m);
 		void setProjectionTransform(const glm::mat4& m);
+		void setExplosionDist(const float ed);
 
 		glm::mat4 modelViewTransform() const;
 		glm::mat4 modelViewProjectionTransform() const;
-
+        float getExplosionDist() const;
 		glm::mat4 modelLightTransform() const;
 		glm::mat4 modelLightProjectionTransform() const;
-
 		void saveImage(const std::string & filename);
 
 	private:
@@ -59,6 +60,7 @@ namespace minity
 		static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 		static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 		static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+		float explosionDist = 0.f;
 
 		GLFWwindow* m_window;
 		Scene *m_scene;
@@ -72,7 +74,6 @@ namespace minity
 		glm::mat4 m_projectionTransform = glm::mat4(1.0f);
 		glm::mat4 m_lightTransform = glm::mat4(1.0f);
 		glm::vec4 m_viewLightPosition = glm::vec4(0.0f, 0.0f,-sqrt(3.0f),1.0f);
-
 		bool m_showUi = true;
 		bool m_saveScreenshot = false;
 	};
@@ -86,5 +87,5 @@ namespace minity
 	 * @param rotation Out parameter for rotation
 	 * @param scale Out parameter for scale
 	 */
-	void matrixDecompose(const glm::mat4& matrix, glm::vec3& translation, glm::mat4& rotation, glm::vec3& scale);
+	void matrixDecompose(const glm::mat4& matrix, glm::vec3& translation, glm::mat4& rotation, glm::vec3& scale, bool preMultipliedRotation);
 }

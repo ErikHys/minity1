@@ -61,7 +61,7 @@ void ModelRenderer::display()
 	const mat3 normalMatrix = mat3(transpose(inverseModelViewMatrix));
 	const mat3 inverseNormalMatrix = inverse(normalMatrix);
 	const vec2 viewportSize = viewer()->viewportSize();
-
+    const float explosionDist = viewer()->getExplosionDist();
 
 
     auto shaderProgramModelBase = shaderProgram("model-base");
@@ -87,7 +87,6 @@ void ModelRenderer::display()
     static int mapping = 0;
     static bool bumps = false;
     static bool textures = false;
-    static float explosionDist = 0.f;
     static float amplitude = 1.f;
     static float frequency = 128.f;
 
@@ -106,7 +105,6 @@ void ModelRenderer::display()
         }
         ImGui::Checkbox("Textures", &textures);
         ImGui::SliderInt("Which mapping, standard, object, tangent", &mapping, 0, 2);
-        ImGui::SliderFloat("Explosion", &explosionDist, 0.0, 1.0);
         if(ImGui::CollapsingHeader("Bumps")){
             ImGui::Checkbox("Bump mapping", &bumps);
             ImGui::SliderFloat("Amplitude", &amplitude, 0.0, 1.0);

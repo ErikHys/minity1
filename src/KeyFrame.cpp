@@ -5,33 +5,13 @@
 #include "KeyFrame.h"
 
 
-KeyFrame::KeyFrame(mat4 modelViewProjectionMatrix, vec2 viewPortSize, vec3 worldCameraPosition, vec3 worldLightPosition,
-                   vec3 lightIntensity, vec3 lightColor, vec3 backgroundColor, float explosionDist) {
-    this->modelViewProjectionMatrix = modelViewProjectionMatrix;
-    this->viewPortSize = viewPortSize;
-    this->worldCameraPosition = worldCameraPosition;
-    this->worldLightPosition = worldLightPosition;
-    this->lightIntensity = lightIntensity;
-    this->lightColor = lightColor;
+KeyFrame::KeyFrame(mat4 modelViewTransform, mat4 modelLightTransform,
+                   vec3 backgroundColor, float explosionDist) {
+    this->modelViewTransform = modelViewTransform;
+    this->modelLightTransform = modelLightTransform;
     this->backgroundColor = backgroundColor;
     this->explosionDist = explosionDist;
 
-}
-
-mat4 KeyFrame::getModelViewProjectionMatrix() const {
-    return modelViewProjectionMatrix;
-}
-
-vec2 KeyFrame::getViewPortSize() const {
-    return viewPortSize;
-}
-
-vec3 KeyFrame::getWorldCameraPosition() const {
-    return worldCameraPosition;
-}
-
-vec3 KeyFrame::getWorldLightPosition() const {
-    return worldLightPosition;
 }
 
 vec3 KeyFrame::getLightIntensity() const {
@@ -48,4 +28,12 @@ vec3 KeyFrame::getBackgroundColor() const {
 
 float KeyFrame::getExplosionDist() const {
     return explosionDist;
+}
+
+mat4 KeyFrame::getModelViewTransform() const {
+    return modelViewTransform;
+}
+
+mat4 KeyFrame::getModelLightTransform() const {
+    return modelLightTransform;
 }

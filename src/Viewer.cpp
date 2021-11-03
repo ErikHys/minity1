@@ -14,6 +14,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "CameraInteractor.h"
+#include "AnimatorInteractor.h"
 #include "BoundingBoxRenderer.h"
 #include "ModelRenderer.h"
 #include "RaytraceRenderer.h"
@@ -53,6 +54,7 @@ Viewer::Viewer(GLFWwindow *window, Scene *scene) : m_window(window), m_scene(sce
 	io.Fonts->AddFontFromFileTTF("./res/ui/Lato-Semibold.ttf", 18);
 
 	m_interactors.emplace_back(std::make_unique<CameraInteractor>(this));
+	m_interactors.emplace_back(std::make_unique<AnimatorInteractor>(this));
 	m_renderers.emplace_back(std::make_unique<ModelRenderer>(this));
 	m_renderers.emplace_back(std::make_unique<RaytraceRenderer>(this));
 	m_renderers.emplace_back(std::make_unique<BoundingBoxRenderer>(this));
@@ -426,8 +428,9 @@ void Viewer::mainMenu()
 	if (ImGui::BeginMenu("Viewer"))
 	{
 		ImGui::ColorEdit3("Background Color", (float*)&m_backgroundColor);
+        ImGui::SliderFloat("Explosion", &explosionDist, 0.0, 1.0);
 
-		if (ImGui::BeginMenu("Viewport Size"))
+        if (ImGui::BeginMenu("Viewport Size"))
 		{
 			if (ImGui::MenuItem("512 x 512"))
 				glfwSetWindowSize(m_window, 512, 512);
@@ -454,21 +457,34 @@ void Viewer::mainMenu()
 	}
 }
 
+float Viewer::getExplosionDist() const {
+    return explosionDist;
+}
+
+void Viewer::setExplosionDist(float eD) {
+    this->explosionDist = eD;
+}
+
+
+
 namespace minity
 {
-	void matrixDecompose(const glm::mat4& matrix, glm::vec3& translation, glm::mat4& rotation, glm::vec3& scale)
-	{
-		translation = glm::vec3{matrix[3]};
-		glm::mat3 inner = glm::mat3{matrix};
-		
-		scale.x = glm::length(inner[0]);
-		scale.y = glm::length(inner[1]);
-		scale.z = glm::length(inner[2]);
-		
-		inner[0] /= scale.x;
-		inner[1] /= scale.y;
-		inner[2] /= scale.z;
+    void matrixDecompose(const glm::mat4& matrix, glm::vec3& translation, glm::mat4& rotation, glm::vec3& scale, bool preMultipliedRotation)
+    {
+        translation = glm::vec3{matrix[3]};
+        glm::mat3 inner = glm::mat3{matrix};
 
-		rotation = glm::mat4{inner};
-	}
+        scale.x = glm::length(inner[0]);
+        scale.y = glm::length(inner[1]);
+        scale.z = glm::length(inner[2]);
+
+        inner[0] /= scale.x;
+        inner[1] /= scale.y;
+        inner[2] /= scale.z;
+
+        rotation = glm::mat4{inner};
+
+        if (preMultipliedRotation)
+            translation = glm::inverse(inner) * translation;
+    }
 }
