@@ -74,7 +74,7 @@ void ModelRenderer::display()
 	const std::vector<Group> & groups = viewer()->scene()->model()->groups();
 	const std::vector<Material> & materials = viewer()->scene()->model()->materials();
 
-	static std::vector<bool> groupEnabled(groups.size(), true);
+	static std::vector<bool> groupEnabled(groups.size(), false);
 	static bool wireframeEnabled = false;
 	static bool lightSourceEnabled = true;
 	static vec4 wireframeLineColor = vec4(1.0f);
