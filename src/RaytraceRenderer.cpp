@@ -44,16 +44,31 @@ void RaytraceRenderer::display()
 	// retrieve/compute all necessary matrices and related properties
 	const mat4 modelViewProjectionMatrix = viewer()->modelViewProjectionTransform();
 	const mat4 inverseModelViewProjectionMatrix = inverse(modelViewProjectionMatrix);
-
+    static bool sphere = false;
+    static bool box = false;
+    static bool cylinder = false;
+    static bool plane = false;
 	auto shaderProgramRaytrace = shaderProgram("raytrace");
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+    if (ImGui::BeginMenu("Raytrace")) {
+        ImGui:: Checkbox("box", &box);
+        ImGui:: Checkbox("sphere", &sphere);
+        ImGui:: Checkbox("cylinder", &cylinder);
+        ImGui:: Checkbox("plane", &plane);
+        ImGui::EndMenu();
+
+    }
+    int shape = sphere ? 1 : box ? 2 : cylinder ? 3 : plane ? 4 : 0;
 
 	shaderProgramRaytrace->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramRaytrace->setUniform("inverseModelViewProjectionMatrix", inverseModelViewProjectionMatrix);
+    shaderProgramRaytrace->setUniform("shape", shape);
 
-	m_quadArray->bind();
+
+
+    m_quadArray->bind();
 	shaderProgramRaytrace->use();
 	// we are rendering a screen filling quad (as a tringle strip), so we can cast rays for every pixel
 	m_quadArray->drawArrays(GL_TRIANGLE_STRIP, 0, 4);

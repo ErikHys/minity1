@@ -25,7 +25,10 @@ uniform int mapping;
 uniform bool bumps;
 uniform float amplitude;
 uniform float frequency;
-uniform bool textures;
+uniform bool diffuseTextureActivate;
+uniform bool ambientTextureActivate;
+uniform bool specularTextureActivate;
+
 
 in fragmentData
 {
@@ -125,8 +128,15 @@ void main()
 	}
 
 	vec4 result = frontShade + backShade + fillShade;
-	if (textures){
-		result.rgb *= (texture(diffuseTexture, fragment.texCoord).rgb * texture(specularTexture, fragment.texCoord).rgb  * texture(ambientTexture, fragment.texCoord).rgb);
+
+	if(diffuseTextureActivate){
+		result.rgb *= texture(diffuseTexture, fragment.texCoord).rgb;
+	}
+	if(ambientTextureActivate){
+		result.rgb *= texture(ambientTexture, fragment.texCoord).rgb;
+	}
+	if(specularTextureActivate){
+		result.rgb *= texture(specularTexture, fragment.texCoord).rgb;
 	}
 	if (wireframeEnabled)
 	{

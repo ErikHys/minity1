@@ -86,9 +86,12 @@ void ModelRenderer::display()
     static int levelOfCelShading = 5;
     static int mapping = 0;
     static bool bumps = false;
-    static bool textures = false;
     static float amplitude = 1.f;
     static float frequency = 128.f;
+    static bool diffTextures = false;
+    static bool ambTextures = false;
+    static bool specTextures = false;
+
 
 
     if (ImGui::BeginMenu("Model"))
@@ -103,7 +106,12 @@ void ModelRenderer::display()
             ImGui::SliderFloat("Light intensity back", &lightIntensityBack, 0.0f, 2.0f);
             ImGui::SliderFloat("Light intensity side", &lightIntensitySide, 0.0f, 2.0f);
         }
-        ImGui::Checkbox("Textures", &textures);
+        if(ImGui::CollapsingHeader("Textures")) {
+            ImGui::Checkbox("Ambient texture", &ambTextures);
+            ImGui::Checkbox("Diffuse texture", &diffTextures);
+            ImGui::Checkbox("Specular texture", &specTextures);
+        }
+
         ImGui::SliderInt("Which mapping, standard, object, tangent", &mapping, 0, 2);
         if(ImGui::CollapsingHeader("Bumps")){
             ImGui::Checkbox("Bump mapping", &bumps);
@@ -153,11 +161,14 @@ void ModelRenderer::display()
     shaderProgramModelBase->setUniform("levelOfCelShading", levelOfCelShading);
     shaderProgramModelBase->setUniform("mapping", mapping);
     shaderProgramModelBase->setUniform("bumps", bumps);
-    shaderProgramModelBase->setUniform("textures", textures);
     shaderProgramModelBase->setUniform("modelMidPoint", viewer()->scene()->model()->midpoint());
     shaderProgramModelBase->setUniform("explosionDist", explosionDist);
     shaderProgramModelBase->setUniform("amplitude", amplitude);
     shaderProgramModelBase->setUniform("frequency", frequency);
+    shaderProgramModelBase->setUniform("diffuseTextureActivate", diffTextures);
+    shaderProgramModelBase->setUniform("ambientTextureActivate", ambTextures);
+    shaderProgramModelBase->setUniform("specularTextureActivate", specTextures);
+
 
 
 

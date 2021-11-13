@@ -4,6 +4,7 @@
 
 uniform mat4 modelViewProjectionMatrix;
 uniform mat4 inverseModelViewProjectionMatrix;
+uniform int shape;
 
 in vec2 fragPosition;
 out vec4 fragColor;
@@ -156,12 +157,18 @@ void main()
 	// this is the setup for our viewing ray
 	vec3 rayOrigin = near.xyz;
 	vec3 rayDirection = normalize((far-near).xyz);
-//	float t = collisionSphere(rayOrigin, rayDirection, s);
-//	float t = collisionBox(rayOrigin, rayDirection, b);
-	float t = collisionCylinder(rayOrigin, rayDirection, c);
-	float newT = renderCylinderDisc(rayOrigin, rayDirection, c);
-	if(newT > 0 && (newT <= t || t < 0)){
-		t = newT;
+	float t = -1.0;
+	if(shape == 1){
+		t = collisionSphere(rayOrigin, rayDirection, s);
+	}else if (shape == 2){
+		t = collisionBox(rayOrigin, rayDirection, b);
+
+	}else if(shape == 3){
+		t = collisionCylinder(rayOrigin, rayDirection, c);
+		float newT = renderCylinderDisc(rayOrigin, rayDirection, c);
+		if(newT > 0 && (newT <= t || t < 0)){
+			t = newT;
+		}
 	}
 
 
