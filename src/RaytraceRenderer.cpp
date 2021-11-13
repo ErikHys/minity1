@@ -60,11 +60,13 @@ void RaytraceRenderer::display()
         ImGui::EndMenu();
 
     }
-    int shape = sphere ? 1 : box ? 2 : cylinder ? 3 : plane ? 4 : 0;
 
 	shaderProgramRaytrace->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramRaytrace->setUniform("inverseModelViewProjectionMatrix", inverseModelViewProjectionMatrix);
-    shaderProgramRaytrace->setUniform("shape", shape);
+    shaderProgramRaytrace->setUniform("sphereBool", sphere);
+    shaderProgramRaytrace->setUniform("boxBool", box);
+    shaderProgramRaytrace->setUniform("cylinderBool", cylinder);
+    shaderProgramRaytrace->setUniform("planeBool", plane);
 
 
 

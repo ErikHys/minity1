@@ -4,7 +4,10 @@
 
 uniform mat4 modelViewProjectionMatrix;
 uniform mat4 inverseModelViewProjectionMatrix;
-uniform int shape;
+uniform bool sphereBool;
+uniform bool boxBool;
+uniform bool cylinderBool;
+uniform bool planeBool;
 
 in vec2 fragPosition;
 out vec4 fragColor;
@@ -22,9 +25,10 @@ struct Cylinder{
 	float radius;
 	float height;
 };
-//struct Plane{
-//
-//};
+struct Plane{
+	vec3 normal;
+	float distance;
+};
 
 float calcDepth(vec3 pos)
 {
@@ -109,6 +113,16 @@ float collisionCylinder(vec3 origin, vec3 direction, Cylinder cylinder){
 		return -1;
 	}
 }
+float collisionPlane(vec3 origin, vec3 direction, Plane plane){
+	vec3 normal = plane.normal;
+	float dirnorm = dot(direction, normal);
+	float orinorm = dot(origin, normal);
+	if(dirnorm == 0.0){
+		return -1;
+	}
+	return (plane.distance - orinorm) / dirnorm;
+
+}
 
 float renderCylinderDisc(vec3 origin, vec3 direction, Cylinder cylinder){
 	vec3 topNormal = vec3(0.0, 0.0, 1.0);
@@ -150,26 +164,38 @@ void main()
 	near /= near.w;
 	vec4 far = inverseModelViewProjectionMatrix*vec4(fragPosition,1.0,1.0);
 	far /= far.w;
-	Sphere s = Sphere(vec3(0.f), 0.8f);
+	Sphere s = Sphere(vec3(-1.f), 0.8f);
 	Box b = Box(vec3(0.5),vec3(-0.5));
-	Cylinder c = Cylinder(vec3(0.f), 0.8f, 1.0);
+	Cylinder c = Cylinder(vec3(0.7f), 0.8f, 1.0);
+	Plane p = Plane(vec3(1., 0., 0.5), 0.7);
 
 	// this is the setup for our viewing ray
 	vec3 rayOrigin = near.xyz;
 	vec3 rayDirection = normalize((far-near).xyz);
-	float t = -1.0;
-	if(shape == 1){
-		t = collisionSphere(rayOrigin, rayDirection, s);
-	}else if (shape == 2){
-		t = collisionBox(rayOrigin, rayDirection, b);
+	float t = 10000.0;
+	if(sphereBool){
+		float tempT = collisionSphere(rayOrigin, rayDirection, s);
+		t = tempT > 0 && tempT < t ? tempT : t;
+	}
+	if (boxBool){
+		float tempT = collisionBox(rayOrigin, rayDirection, b);
+		t = tempT > 0 && tempT < t ? tempT : t;
 
-	}else if(shape == 3){
-		t = collisionCylinder(rayOrigin, rayDirection, c);
+	}
+	if(cylinderBool){
+		float tempT = collisionCylinder(rayOrigin, rayDirection, c);
+		t = tempT > 0 && tempT < t ? tempT : t;
 		float newT = renderCylinderDisc(rayOrigin, rayDirection, c);
 		if(newT > 0 && (newT <= t || t < 0)){
 			t = newT;
 		}
 	}
+	if(planeBool){
+		float tempT = collisionPlane(rayOrigin, rayDirection, p);
+		t = tempT > 0 && tempT < t ? tempT : t;
+
+	}
+	if(t == 10000.0) t = -1;
 
 
 
