@@ -44,26 +44,48 @@ void RaytraceRenderer::display()
 	// retrieve/compute all necessary matrices and related properties
 	const mat4 modelViewProjectionMatrix = viewer()->modelViewProjectionTransform();
 	const mat4 inverseModelViewProjectionMatrix = inverse(modelViewProjectionMatrix);
+    const mat4 modelLightMatrix = viewer()->modelLightTransform();
+    const mat4 modelViewMatrix = viewer()->modelViewTransform();
+    const mat4 inverseModelLightMatrix = inverse(modelLightMatrix);
+    const mat4 inverseModelViewMatrix = inverse(modelViewMatrix);
+
     static bool sphere = false;
     static bool box = false;
     static bool cylinder = false;
     static bool plane = false;
-	auto shaderProgramRaytrace = shaderProgram("raytrace");
+    static vec3 lightColor = vec3 (1.0, 1.0, 1.0);
+    static bool celShading = false;
+    static int levelOfCelShading = 5;
+    static float lightIntensityFront = 1.0;
+    auto shaderProgramRaytrace = shaderProgram("raytrace");
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
     if (ImGui::BeginMenu("Raytrace")) {
-        ImGui:: Checkbox("box", &box);
-        ImGui:: Checkbox("sphere", &sphere);
-        ImGui:: Checkbox("cylinder", &cylinder);
-        ImGui:: Checkbox("plane", &plane);
+        if(ImGui::CollapsingHeader("Shapes")) {
+            ImGui::Checkbox("box", &box);
+            ImGui::Checkbox("sphere", &sphere);
+            ImGui::Checkbox("cylinder", &cylinder);
+            ImGui::Checkbox("plane", &plane);
+        }
+        ImGui::SliderFloat("Light intensity", &lightIntensityFront, 0.0f, 3.0f);
+        ImGui::ColorEdit3("Light Color", (float*) &lightColor);
+        ImGui::Checkbox("Cel shading Enabled", &celShading);
+        ImGui::SliderInt("Level of cel shading", &levelOfCelShading, 1, 10);
         ImGui::EndMenu();
 
     }
-
+    vec4 worldCameraPosition = inverseModelViewMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    vec4 worldLightPosition = inverseModelLightMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	shaderProgramRaytrace->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramRaytrace->setUniform("inverseModelViewProjectionMatrix", inverseModelViewProjectionMatrix);
-    shaderProgramRaytrace->setUniform("sphereBool", sphere);
+    shaderProgramRaytrace->setUniform("worldCameraPosition", vec3(worldCameraPosition));
+    shaderProgramRaytrace->setUniform("worldLightPosition", vec3(worldLightPosition));
+    shaderProgramRaytrace->setUniform("lightIntensity", lightIntensityFront);
+    shaderProgramRaytrace->setUniform("lightColor", lightColor);
+    shaderProgramRaytrace->setUniform("celShading", celShading);
+    shaderProgramRaytrace->setUniform("levelOfCelShading", levelOfCelShading);
+	shaderProgramRaytrace->setUniform("sphereBool", sphere);
     shaderProgramRaytrace->setUniform("boxBool", box);
     shaderProgramRaytrace->setUniform("cylinderBool", cylinder);
     shaderProgramRaytrace->setUniform("planeBool", plane);

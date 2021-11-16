@@ -4,6 +4,12 @@
 
 uniform mat4 modelViewProjectionMatrix;
 uniform mat4 inverseModelViewProjectionMatrix;
+uniform vec3 worldCameraPosition;
+uniform vec3 worldLightPosition;
+uniform float lightIntensity;
+uniform vec3 lightColor;
+uniform bool celShading;
+uniform int levelOfCelShading;
 uniform bool sphereBool;
 uniform bool boxBool;
 uniform bool cylinderBool;
@@ -158,6 +164,58 @@ float renderCylinderDisc(vec3 origin, vec3 direction, Cylinder cylinder){
 
 }
 
+
+vec3 getAmbientColor(){
+    float ambientLight = 0.1;
+    return ambientLight * lightColor;
+}
+
+vec3 getDiffuse(vec3 lightDir, vec3 normal){
+    vec3 norm = normal;
+    float diff = max(dot(norm, lightDir), 0.0);
+    return diff * lightColor;
+}
+
+vec3 getBlinnPhong(vec3 viewDir, vec3 lightDir, float specularStrength, vec3 normal){
+    vec3 halfway = normalize(lightDir + viewDir);
+    float normal_halfway = pow(max(dot(halfway, normal), 0), 96);
+    return specularStrength * normal_halfway * lightColor;
+}
+float getCelShading(float levels, vec3 lightPos, vec3 normal, vec3 position){
+    vec3 lightDir = normalize(lightPos - position);
+    float dotLightDirNormal = max(dot(lightDir, normal), 0);
+    float blackLine = mod(max(dotLightDirNormal*levels, 0), 1.0);
+    float level = ceil(max(dotLightDirNormal, 0)*levels);
+    if ((blackLine < 0.04 || blackLine > 0.96) && level < levels){
+        return 0.05;
+    }
+
+    return level / levels;
+}
+
+vec4 getShading(vec3 lightPos, float lightIntensity, vec3 normal, vec3 position){
+    float specStrength = 0.7;
+    vec3 ambientColor = getAmbientColor();
+    vec3 lightDir = normalize(lightPos - position);
+    vec3 diffuse = getDiffuse(lightDir, normal);
+    vec3 viewDir = normalize(worldCameraPosition - position);
+    vec3 specular = getBlinnPhong(viewDir, lightDir, specStrength, normal);
+    return vec4((0.15 * ambientColor + 0.4 * diffuse +  0.45 * specular) * lightColor * lightIntensity, 1.0);
+}
+
+vec3 argMaxVec3(vec3 vector){
+	if (vector.x > vector.y && vector.x > vector.z) return vec3(1., 0., 0.);
+	if (vector.y > vector.x && vector.y > vector.z) return  vec3(0., 1., 0.);
+	else return  vec3(0., 0., 1.);
+}
+
+vec3 getBoxNormal(Box b, vec3 collisionPoint){
+	vec3 center = (b.maxxyz + b.minxyz) / 2;
+	vec3 centerToCollision = collisionPoint - center;
+	vec3 n = normalize(argMaxVec3(abs(centerToCollision)) * centerToCollision);
+	return n;
+}
+
 void main()
 {
 	vec4 near = inverseModelViewProjectionMatrix*vec4(fragPosition,-1.0,1.0);
@@ -173,27 +231,36 @@ void main()
 	vec3 rayOrigin = near.xyz;
 	vec3 rayDirection = normalize((far-near).xyz);
 	float t = 10000.0;
+    vec3 normal = vec3(0.0);
 	if(sphereBool){
 		float tempT = collisionSphere(rayOrigin, rayDirection, s);
+        float oldT = t;
 		t = tempT > 0 && tempT < t ? tempT : t;
+        normal = t != oldT ? normalize((rayOrigin+t*rayDirection)-s.center) : normal;
+
 	}
 	if (boxBool){
 		float tempT = collisionBox(rayOrigin, rayDirection, b);
-		t = tempT > 0 && tempT < t ? tempT : t;
-
+        float oldT = t;
+        t = tempT > 0 && tempT < t ? tempT : t;
+        normal = t != oldT ? getBoxNormal(b, rayOrigin+t*rayDirection) : normal;
 	}
 	if(cylinderBool){
 		float tempT = collisionCylinder(rayOrigin, rayDirection, c);
-		t = tempT > 0 && tempT < t ? tempT : t;
+        float oldT = t;
+        t = tempT > 0 && tempT < t ? tempT : t;
+        normal = t != oldT ? normalize(vec3((rayOrigin+t*rayDirection).xy-c.center.xy, 0.0)) : normal;
 		float newT = renderCylinderDisc(rayOrigin, rayDirection, c);
 		if(newT > 0 && (newT <= t || t < 0)){
 			t = newT;
+            normal = rayOrigin.z + t*rayDirection.z < 0 ? -vec3(0., 0., 1) : vec3(0., 0., 1);
 		}
 	}
 	if(planeBool){
 		float tempT = collisionPlane(rayOrigin, rayDirection, p);
-		t = tempT > 0 && tempT < t ? tempT : t;
-
+        float oldT = t;
+        t = tempT > 0 && tempT < t ? tempT : t;
+        normal = t != oldT ? normalize(p.normal) : normal;
 	}
 	if(t == 10000.0) t = -1;
 
@@ -210,7 +277,10 @@ void main()
 		float newDepth = calcDepth(rayOrigin + t*rayDirection);
 		if (newDepth < gl_FragDepth){
 			gl_FragDepth = newDepth;
-			fragColor = vec4(rayOrigin+t*rayDirection, 1.0);
+			vec4 shading = getShading(worldLightPosition, lightIntensity, normal, rayOrigin+t*rayDirection);
+			shading = celShading ? shading * getCelShading(float(levelOfCelShading), worldLightPosition, normal, rayOrigin+t*rayDirection) : shading;
+
+			fragColor = shading;
 		}
 	}
 }
