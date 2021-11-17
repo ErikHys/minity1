@@ -11,6 +11,7 @@
 #include "Scene.h"
 #include "Interactor.h"
 #include "Renderer.h"
+#include "RayTraceInfo.h"
 
 namespace minity
 {
@@ -47,6 +48,8 @@ namespace minity
 		glm::mat4 modelLightTransform() const;
 		glm::mat4 modelLightProjectionTransform() const;
 		void saveImage(const std::string & filename);
+        RayTraceInfo getRayTraceInfo();
+        void setRayTraceInfo(RayTraceInfo rayTraceInfo);
 
 	private:
 

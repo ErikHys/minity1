@@ -62,9 +62,18 @@ static bool play = false;
 void AnimatorInteractor::keyEvent(int key, int scancode, int action, int mods) {
 
     if(key == GLFW_KEY_KP_ADD && action == GLFW_PRESS){
+        if(!rayTracing){
         KeyFrame keyFrame = KeyFrame(viewer()->viewTransform(),
                                      viewer()->lightTransform(), viewer()->backgroundColor(), viewer()->getExplosionDist());
         keyFrames.push_back(keyFrame);
+        }else{
+            RayTraceInfo rayTraceInfo = viewer()->getRayTraceInfo();
+            KeyFrame keyFrame = KeyFrame(viewer()->viewTransform(),
+                                         viewer()->lightTransform(),
+                                         viewer()->backgroundColor(), viewer()->getExplosionDist(),
+                                         rayTraceInfo);
+            keyFrames.push_back(keyFrame);
+        }
         globjects::debug() << "Added frame nr: " << std::to_string(keyFrames.size());
     } else if(key == 333 && action == GLFW_PRESS){
         //Remove KeyFrame
@@ -96,6 +105,10 @@ void AnimatorInteractor::keyEvent(int key, int scancode, int action, int mods) {
         globjects::debug() << "Stopping, or restarting animation";
         play = !play;
         indexOfAnimation = 0;
+    }else if(key == GLFW_KEY_R && action == GLFW_PRESS){
+        this->rayTracing = !rayTracing;
+        globjects::debug() << "Raytracing = " << rayTracing;
+
     }
 }
 
@@ -109,12 +122,22 @@ void AnimatorInteractor::display() {
         if(keyFrames.empty()){
             play = false;
         }else{
-            KeyFrame keyFrame = keyFrames.at(indexOfAnimation);
-            viewer()->setLightTransform(keyFrame.getModelLightTransform());
-            viewer()->setViewTransform(keyFrame.getModelViewTransform());
-            viewer()->setBackgroundColor(keyFrame.getBackgroundColor());
-            viewer()->setExplosionDist(keyFrame.getExplosionDist());
-            indexOfAnimation = (indexOfAnimation+1) % keyFrames.size();
+            if(rayTracing){
+                KeyFrame keyFrame = keyFrames.at(indexOfAnimation);
+                viewer()->setLightTransform(keyFrame.getModelLightTransform());
+                viewer()->setViewTransform(keyFrame.getModelViewTransform());
+                viewer()->setBackgroundColor(keyFrame.getBackgroundColor());
+                viewer()->setExplosionDist(keyFrame.getExplosionDist());
+                viewer()->setRayTraceInfo(keyFrame.rayTraceInfo);
+                indexOfAnimation = (indexOfAnimation+1) % keyFrames.size();
+            } else{
+                KeyFrame keyFrame = keyFrames.at(indexOfAnimation);
+                viewer()->setLightTransform(keyFrame.getModelLightTransform());
+                viewer()->setViewTransform(keyFrame.getModelViewTransform());
+                viewer()->setBackgroundColor(keyFrame.getBackgroundColor());
+                viewer()->setExplosionDist(keyFrame.getExplosionDist());
+                indexOfAnimation = (indexOfAnimation+1) % keyFrames.size();
+            }
         }
     }
 }
@@ -147,6 +170,42 @@ std::vector<mat4> AnimatorInteractor::matrixSplines(mat4 m0, mat4 m1, mat4 m2, m
     return result;
 }
 
+std::vector<RayTraceInfo> AnimatorInteractor::rayTracingSpline(RayTraceInfo p0, RayTraceInfo p1,
+                                                               RayTraceInfo p2, RayTraceInfo p3, double dt){
+    std::vector<vec3> sphereColors = catmullRom<3>(p0.sphereColor, p1.sphereColor, p2.sphereColor, p3.sphereColor, dt);
+    std::vector<vec3> boxColors = catmullRom<3>(p0.boxColor, p1.boxColor, p2.boxColor, p3.boxColor, dt);
+    std::vector<vec3> cylinderColors = catmullRom<3>(p0.cylinderColor, p1.cylinderColor, p2.cylinderColor, p3.cylinderColor, dt);
+    std::vector<vec3> planeColors = catmullRom<3>(p0.planeColor, p1.planeColor, p2.planeColor, p3.planeColor, dt);
+    std::vector<vec3> spherePositions = catmullRom<3>(p0.spherePosition, p1.spherePosition, p2.spherePosition, p3.sphereColor, dt);
+    std::vector<vec3> boxPositions = catmullRom<3>(p0.boxPosition, p1.boxPosition, p2.boxPosition, p3.boxPosition, dt);
+    std::vector<vec3> cylinderPositions = catmullRom<3>(p0.cylinderPosition, p1.cylinderPosition, p2.cylinderPosition, p3.cylinderPosition, dt);
+    std::vector<vec3> planeNormals = catmullRom<3>(p0.planeNormal, p1.planeNormal, p2.planeNormal, p3.planeNormal, dt);
+    std::vector<vec1> planePositions = catmullRom<1>(vec1(p0.planePosition), vec1(p1.planePosition),
+                                                    vec1(p2.planePosition),vec1(p3.planePosition), dt);
+    std::vector<vec1> cylinderHeights = catmullRom<1>(vec1(p0.cylinderHeight), vec1(p1.cylinderHeight),
+                                                    vec1(p2.cylinderHeight),vec1(p3.cylinderHeight), dt);
+    std::vector<vec1> boxScales = catmullRom<1>(vec1(p0.boxScale), vec1(p1.boxScale),
+                                                    vec1(p2.boxScale),vec1(p3.boxScale), dt);
+    std::vector<vec1> sphereScales = catmullRom<1>(vec1(p0.sphereScale), vec1(p1.sphereScale),
+                                                    vec1(p2.sphereScale),vec1(p3.sphereScale), dt);
+    std::vector<vec3> lightColors = catmullRom<3>(p0.lightColor, p1.lightColor, p2.lightColor, p3.lightColor, dt);
+    std::vector<vec1> lightIntensityFronts = catmullRom<1>(vec1(p0.lightIntensityFront), vec1(p1.lightIntensityFront),
+                                                   vec1(p2.lightIntensityFront),vec1(p3.lightIntensityFront), dt);
+    std::vector<RayTraceInfo> result = {};
+    for(int i = 0; i < sphereColors.size(); i++){
+        RayTraceInfo r = RayTraceInfo(p0.sphere, p0.box, p0.cylinder, p0.plane, sphereColors.at(i), boxColors.at(i),
+                                      cylinderColors.at(i), planeColors.at(i), spherePositions.at(i), boxPositions.at(i),
+                                      cylinderPositions.at(i), planeNormals.at(i), planePositions.at(i).x, cylinderHeights.at(i).x,
+                                      boxScales.at(i).x, sphereScales.at(i).x, lightColors.at(i), p0.celShading, p0.levelOfCelShading,
+                                      lightIntensityFronts.at(i).x);
+        result.emplace_back(r);
+        globjects::debug() << "splining values, sphere color = " << sphereColors.at(i).x << " "
+                           << sphereColors.at(i).y << " "<< sphereColors.at(i).z;
+    }
+    return result;
+
+}
+
 std::vector<KeyFrame> AnimatorInteractor::doInterPolation(std::vector<KeyFrame> frames) {
     std::vector<KeyFrame> result = {};
     dt = deltaTime;
@@ -159,11 +218,20 @@ std::vector<KeyFrame> AnimatorInteractor::doInterPolation(std::vector<KeyFrame> 
                                                frames.at(i+2).getBackgroundColor(), frames.at(i+3).getBackgroundColor(), dt);
         std::vector<vec1> eds = catmullRom<1>(vec1(frames.at(i).getExplosionDist()), vec1(frames.at(i+1).getExplosionDist()),
                                              vec1(frames.at(i+2).getExplosionDist()), vec1(frames.at(i+3).getExplosionDist()), dt);
-
-
+        std::vector<RayTraceInfo> rayTraceInfo;
+        if(rayTracing){
+        rayTraceInfo = rayTracingSpline(frames.at(i).rayTraceInfo, frames.at(i+1).rayTraceInfo,
+                                                                  frames.at(i+2).rayTraceInfo, frames.at(i+3).rayTraceInfo, dt);
+        }
         for(int j = 0; j < bgcs.size(); j++){
+            if(rayTracing){
             result.emplace_back(mwts.at(j), mlts.at(j),
-                                bgcs.at(j), eds.at(j).x);
+                                bgcs.at(j), eds.at(j).x, rayTraceInfo.at(j));
+
+            }else{
+                result.emplace_back(mwts.at(j), mlts.at(j),
+                                    bgcs.at(j), eds.at(j).x);
+            }
         }
     }
     globjects::debug() << "Animation starting...";

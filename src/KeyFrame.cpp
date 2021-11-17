@@ -37,3 +37,13 @@ mat4 KeyFrame::getModelViewTransform() const {
 mat4 KeyFrame::getModelLightTransform() const {
     return modelLightTransform;
 }
+
+KeyFrame::KeyFrame(mat4 modelViewTransform, mat4 modelLightTransform, vec3 backgroundColor, float explosionDist,
+                   RayTraceInfo rayTraceInfo) {
+    this->modelViewTransform = modelViewTransform;
+    this->modelLightTransform = modelLightTransform;
+    this->backgroundColor = backgroundColor;
+    this->explosionDist = explosionDist;
+    this->rayTraceInfo = rayTraceInfo;
+
+}

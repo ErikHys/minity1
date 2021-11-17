@@ -465,7 +465,15 @@ void Viewer::setExplosionDist(float eD) {
     this->explosionDist = eD;
 }
 
+RayTraceInfo Viewer::getRayTraceInfo() {
+    auto possibleRenderer = dynamic_cast<RaytraceRenderer*>(m_renderers.at(1).get());
+    return possibleRenderer ? possibleRenderer->getInfo() : RayTraceInfo{};
+}
 
+void Viewer::setRayTraceInfo(RayTraceInfo rayTraceInfo) {
+    auto possibleRenderer = dynamic_cast<RaytraceRenderer*>(m_renderers.at(1).get());
+    if(possibleRenderer)possibleRenderer->setInfo(rayTraceInfo);
+}
 
 namespace minity
 {
