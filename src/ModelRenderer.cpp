@@ -115,8 +115,8 @@ void ModelRenderer::display()
         ImGui::SliderInt("Which mapping, standard, object, tangent", &mapping, 0, 2);
         if(ImGui::CollapsingHeader("Bumps")){
             ImGui::Checkbox("Bump mapping", &bumps);
-            ImGui::SliderFloat("Amplitude", &amplitude, 0.0, 1.0);
-            ImGui::SliderFloat("Frequency", &frequency, 0.0, 1.0);
+            ImGui::SliderFloat("Amplitude", &amplitude, 0.0, 2.0);
+            ImGui::SliderFloat("Frequency", &frequency, 1.0, 128.0);
         }
 
 

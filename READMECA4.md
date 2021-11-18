@@ -1,0 +1,4 @@
+All mandatory task
+see raytracing renderer
+raytracing fragmentshader
+and animatorinteractor

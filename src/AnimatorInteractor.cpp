@@ -199,8 +199,6 @@ std::vector<RayTraceInfo> AnimatorInteractor::rayTracingSpline(RayTraceInfo p0, 
                                       boxScales.at(i).x, sphereScales.at(i).x, lightColors.at(i), p0.celShading, p0.levelOfCelShading,
                                       lightIntensityFronts.at(i).x);
         result.emplace_back(r);
-        globjects::debug() << "splining values, sphere color = " << sphereColors.at(i).x << " "
-                           << sphereColors.at(i).y << " "<< sphereColors.at(i).z;
     }
     return result;
 

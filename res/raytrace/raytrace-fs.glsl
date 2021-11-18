@@ -149,6 +149,7 @@ float collisionPlane(vec3 origin, vec3 direction, Plane plane){
 
 }
 
+
 float renderCylinderDisc(vec3 origin, vec3 direction, Cylinder cylinder){
 	vec3 topNormal = vec3(0.0, 0.0, 1.0);
 	vec3 bottomNormal = -topNormal;
@@ -343,6 +344,7 @@ void main()
 	vec3 objectColor = vec3(0.0);
 	vec3 newFragColor = vec3(0.0);
 	float t = -1;
+	int maxRec = 15;
 	bool refractBools[16];
 	vec3 rayOriginStack[16];
 	vec3 rayDirectionStack[16];
@@ -352,13 +354,12 @@ void main()
 	rayDirectionStack[addIndex] = rayDirection;
 	refractBools[addIndex] = false;
 	addIndex++;
-	int maxRec = 15;
 	for(int i = 0; i < maxRec; i++){
 		if(addIndex == i)break;
 		rayDirection = rayDirectionStack[getIndex];
 		rayOrigin = rayOriginStack[getIndex];
-		float transparancy = refractBools[getIndex] ? 0.7 : 0.95;
-		float reduction = i < 3 ? 1.0 : i < 7 ? 0.7 : 0.35;
+		float transparancy = refractBools[getIndex] ? 0.75 : 0.95;
+		float reduction = i < 3 ? 1.0 : i < 7 ? 0.25 : 0.1;
 		getIndex++;
 		vec3 newNormal = normal;
 		vec3 newObjectColor = objectColor;
@@ -378,7 +379,7 @@ void main()
 				shading.rgb *= objectColor;
 				newFragColor += shading.rgb * transparancy * reduction;
 			}else{
-				newFragColor += objectColor * 0.1 * reduction;
+				newFragColor += objectColor * 0.1 * reduction * transparancy;
 			}
 
 			rayOrigin = rayOrigin + t*rayDirection;
@@ -396,7 +397,7 @@ void main()
 			addIndex++;
 			}
 
-			rayDirection = refract(rayDirectionCopy, normal, 1.0);
+			rayDirection = refract(rayDirectionCopy, normal, 1.05);
 			rayOriginCopy += rayDirection*0.0001;
 			if(addIndex <= maxRec){
 				rayOriginStack[addIndex] = rayOriginCopy;
